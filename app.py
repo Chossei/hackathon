@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from scipy import stats
 import os
+import glob
 
 st.set_page_config(page_title="Dashboard Análise NBA", page_icon="🏀", layout="wide")
 
@@ -23,10 +24,27 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 @st.cache_data
+def carregar_dados():
+    # Mapeia todos os arquivos que começam com 'dados_parte_'
+    arquivos = glob.glob('dados_parte_*.csv')
+
+    # Lista para armazenar os pedaços
+    lista_dfs = []
+
+    for arquivo in arquivos:
+        df = pd.read_csv(arquivo)
+        lista_dfs.append(df)
+
+    # Junta todos os pedaços em um único DataFrame
+    df_completo = pd.concat(lista_dfs, ignore_index=True)
+    return df_completo
+
+# Chama a função e carrega a base
+team_df = carregar_dados()
+
+
 def load_data():
-    base_dir = r"c:\Users\atila.simoes.est\OneDrive - MPBA\Área de Trabalho\NBA"
-    team_df = pd.read_csv(os.path.join(base_dir, "team_traditional.csv"))
-    player_df = pd.read_csv(os.path.join(base_dir, "traditional.csv"))
+    player_df = pd.read_csv("traditional.csv")
     
     # Filtrar para incluir apenas temporada regular e playoffs
     team_df = team_df[team_df['type'].isin(['regular', 'playoff'])]
@@ -39,6 +57,7 @@ st.write("Explore tendências temporais, analise perfis de equipes e descubra os
 st.divider()
 
 try:
+    team_df = carregar_dados()
     team_df, player_df = load_data()
 except FileNotFoundError:
     st.error("Arquivos de dados não encontrados no diretório especificado.")
