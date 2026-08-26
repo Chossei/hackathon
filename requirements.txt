@@ -2,3 +2,8 @@ streamlit
 pandas
 plotly
 scipy
+numpy
+statsmodels
+scikit-learn
+python-dotenv
+google-genai
