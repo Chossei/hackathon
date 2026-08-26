@@ -5,6 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from scipy import stats
 import os
+import glob
 import statsmodels.api as sm
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score
@@ -32,24 +33,37 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 @st.cache_data
-def load_data():
-    base_dir = r"c:\Users\atila.simoes.est\OneDrive - MPBA\Área de Trabalho\NBA"
-    team_df = pd.read_csv(os.path.join(base_dir, "team_traditional.csv"))
-    player_df = pd.read_csv(os.path.join(base_dir, "traditional.csv"))
+def carregar_dados_particionados():
+    """Lê e junta os arquivos divididos (agora referem-se aos jogadores)."""
+    arquivos = glob.glob('dados_parte_*.csv')
+    lista_dfs = []
     
-    # Filtrar para incluir apenas temporada regular e playoffs
+    for arquivo in arquivos:
+        df = pd.read_csv(arquivo)
+        lista_dfs.append(df)
+        
+    return pd.concat(lista_dfs, ignore_index=True)
+
+@st.cache_data
+def load_data():
+    """Carrega todas as bases e aplica os filtros iniciais."""
+    team_df = pd.read_csv("team_traditional.csv")
+    
+    # player_df agora recebe as partes concatenadas
+    player_df = carregar_dados_particionados()
+
+ # Filtra para incluir apenas temporada regular e playoffs
     team_df = team_df[team_df['type'].isin(['regular', 'playoff'])]
     player_df = player_df[player_df['type'].isin(['regular', 'playoff'])]
-    
-    return team_df, player_df
 
+    return team_df, player_df
 # ----------------- SIDEBAR -----------------
 with st.sidebar:
     st.title("🏀 NBA StatWeek")
     st.markdown("""
     **Hackathon StatWeek III**
     
-    Este dashboard foi projetado para extrair inteligência tática e tendências da NBA, unindo **Estatística Avançada** e **Inteligência Artificial**.
+    Este dashboard foi projetado para extrair inteligência tática e tendências da NBA, unindo **Estatística** e **Inteligência Artificial**.
     """)
     st.divider()
     st.info("Navegue pelas abas na tela principal para explorar os insights de dados.")
